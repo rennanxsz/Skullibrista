@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreMotion
 
 class ViewController: UIViewController {
 
@@ -15,7 +16,8 @@ class ViewController: UIViewController {
     @IBOutlet weak var lbTimePlayed: UILabel!
     @IBOutlet weak var lbInstructions: UILabel!
     
-    
+    var isMoving = false
+    lazy var motionManager = CMMotionManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,8 +41,33 @@ class ViewController: UIViewController {
         player.animationDuration = 0.5
         //Iniciando a animação de imagens
         player.startAnimating()
+        
+        //Escontedo o label de instruções do game
+        Timer.scheduledTimer(withTimeInterval: 6.0, repeats: false) { (timer) in
+            self.start()
+        }
     }
-
+    
+    func start() {
+        //Escondendo as instruções e a tela de game over
+        lbInstructions.isHidden = true
+        viGameOver.isHidden = true
+        isMoving = false
+        
+        //Utilizando o gerenciador de movimento do device.
+        if motionManager.isDeviceMotionAvailable {
+            motionManager.startDeviceMotionUpdates(to: OperationQueue.main, withHandler: { data, error in
+               
+                if error == nil {
+                    if let data = data {
+                        print("x:", data.gravity.x, "y: ", data.gravity.y, "z: ", data.gravity.z)
+                    }
+                }
+                
+            })
+            }
+    }
+    
     @IBAction func playAgain(_ sender: UIButton) {
     }
     
