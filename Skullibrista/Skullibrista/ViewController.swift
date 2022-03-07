@@ -61,6 +61,9 @@ class ViewController: UIViewController {
                 if error == nil {
                     if let data = data {
                         print("x:", data.gravity.x, "y: ", data.gravity.y, "z: ", data.gravity.z)
+                        //Configurando a angulação da caveira.
+                        let angle = atan2(data.gravity.x, data.gravity.y) - .pi
+                        self.player.transform = CGAffineTransform(rotationAngle: CGFloat(angle))
                     }
                 }
                 
