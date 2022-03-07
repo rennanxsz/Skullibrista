@@ -18,6 +18,8 @@ class ViewController: UIViewController {
     
     var isMoving = false
     lazy var motionManager = CMMotionManager()
+    var gameTimer: Timer!
+    var startDate: Date!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,6 +55,11 @@ class ViewController: UIViewController {
         lbInstructions.isHidden = true
         viGameOver.isHidden = true
         isMoving = false
+        startDate = Date()
+        
+        //Zerando os angulos quando o jogo recomeçar
+        self.player.transform = CGAffineTransform(rotationAngle: 0)
+        self.street.transform = CGAffineTransform(rotationAngle: 0)
         
         //Utilizando o gerenciador de movimento do device.
         if motionManager.isDeviceMotionAvailable {
@@ -64,14 +71,50 @@ class ViewController: UIViewController {
                         //Configurando a angulação da caveira.
                         let angle = atan2(data.gravity.x, data.gravity.y) - .pi
                         self.player.transform = CGAffineTransform(rotationAngle: CGFloat(angle))
+                        //Validando se a caveira está dentro do angulo desejado no jogo
+                        if !self.isMoving {
+                            self.checkGameOver()
+                        }
                     }
                 }
                 
             })
             }
+            //Criando um timer para verificar a posição da caveira a cada 4 segundos
+            gameTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true, block: { (timer) in
+            self.rotateWorld()
+        })
+            
+    }
+    //Gerando angulos aleatório no jogo para que o player tenha que manter a caveira dentro
+    func rotateWorld() {
+        let randomAngle = Double(arc4random_uniform(120))/100 - 0.6
+        isMoving = true
+        UIView.animate(withDuration: 0.75, animations: {
+            self.street.transform = CGAffineTransform(rotationAngle: CGFloat(randomAngle))
+        }) { (success) in
+            self.isMoving = false
+        }
+    }
+    
+    //Criando o metodo para iniciar o Game Over
+    func checkGameOver(){
+        let worldAngle = atan2(Double(street.transform.a), Double(street.transform.b))
+        let playerAngle = atan2(Double(player.transform.a), Double(player.transform.b))
+        let diference = abs(worldAngle - playerAngle)
+        if diference > 0.25 {
+            gameTimer.invalidate()
+            viGameOver.isHidden = false
+            motionManager.stopDeviceMotionUpdates()
+            //Calculando o tempo jogado.
+            let secondsPlayed = round(Date().timeIntervalSince(startDate))
+            lbTimePlayed.text = "Você jogou durante \(secondsPlayed) segundos"
+            
+        }
     }
     
     @IBAction func playAgain(_ sender: UIButton) {
+        start()
     }
     
 }
